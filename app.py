@@ -3,98 +3,95 @@ import pandas as pd
 import folium
 from streamlit_folium import st_folium
 
-# 1. 完善后的 GA DDS 站点数据库
-# 包含你之前确认的所有站点及其对应关系
-site_dict = [
-    {"ID": "096", "City": "NEWNAN", "County": "Coweta", "Lat": 33.376, "Lon": -84.799},
-    {"ID": "054", "City": "SUWANEE", "County": "Gwinnett", "Lat": 34.051, "Lon": -84.062},
-    {"ID": "018", "City": "SAVANNAH", "County": "Chatham", "Lat": 32.080, "Lon": -81.091},
-    {"ID": "022", "City": "MARIETTA", "County": "Cobb", "Lat": 33.952, "Lon": -84.549},
-    {"ID": "048", "City": "NORCROSS", "County": "Gwinnett", "Lat": 33.941, "Lon": -84.132},
-    {"ID": "067", "City": "CONYERS", "County": "Rockdale", "Lat": 33.667, "Lon": -84.017},
-    {"ID": "050", "City": "ATLANTA", "County": "Fulton", "Lat": 33.749, "Lon": -84.388},
-    {"ID": "051", "City": "AUGUSTA", "County": "Richmond", "Lat": 33.470, "Lon": -81.974},
-    {"ID": "081", "City": "FAYETTEVILLE", "County": "Fayette", "Lat": 33.447, "Lon": -84.455},
-    {"ID": "033", "City": "LAWRENCEVILLE", "County": "Gwinnett", "Lat": 33.956, "Lon": -83.988},
-    {"ID": "105", "City": "CANTON", "County": "Cherokee", "Lat": 34.237, "Lon": -84.494},
-    {"ID": "108", "City": "CUMMING", "County": "Forsyth", "Lat": 34.207, "Lon": -84.140},
+# 1. 深度补全的 GA DDS 站点数据库
+# 整合了城市 (DAI)、站点代码 (ZGH) 和县 (County)
+site_data = [
+    {"ZGH": "001", "DAI": "ATLANTA", "County": "FULTON", "Lat": 33.744, "Lon": -84.394, "Note": "Whitehall St"},
+    {"ZGH": "003", "DAI": "CARTERSVILLE", "County": "BARTOW", "Lat": 34.165, "Lon": -84.796, "Note": ""},
+    {"ZGH": "004", "DAI": "CARROLLTON", "County": "CARROLL", "Lat": 33.580, "Lon": -85.076, "Note": ""},
+    {"ZGH": "005", "DAI": "ATHENS", "County": "CLARKE", "Lat": 33.951, "Lon": -83.357, "Note": ""},
+    {"ZGH": "007", "DAI": "COLUMBUS", "County": "MUSCOGEE", "Lat": 32.460, "Lon": -84.987, "Note": "Main Office"},
+    {"ZGH": "010", "DAI": "AMERICUS", "County": "SUMTER", "Lat": 32.072, "Lon": -84.232, "Note": ""},
+    {"ZGH": "012", "DAI": "MACON", "County": "BIBB", "Lat": 32.840, "Lon": -83.632, "Note": ""},
+    {"ZGH": "015", "DAI": "DECATUR", "County": "DEKALB", "Lat": 33.774, "Lon": -84.296, "Note": ""},
+    {"ZGH": "018", "DAI": "SAVANNAH", "County": "CHATHAM", "Lat": 32.083, "Lon": -81.099, "Note": "Main Site"},
+    {"ZGH": "019", "DAI": "VALDOSTA", "County": "LOWNDES", "Lat": 30.832, "Lon": -83.278, "Note": ""},
+    {"ZGH": "021", "DAI": "GAINESVILLE", "County": "HALL", "Lat": 34.297, "Lon": -83.824, "Note": ""},
+    {"ZGH": "022", "DAI": "MARIETTA", "County": "COBB", "Lat": 33.952, "Lon": -84.549, "Note": "Cobb County Hub"},
+    {"ZGH": "023", "DAI": "BRUNSWICK", "County": "GLYNN", "Lat": 31.149, "Lon": -81.491, "Note": ""},
+    {"ZGH": "024", "DAI": "AUGUSTA", "County": "RICHMOND", "Lat": 33.470, "Lon": -81.974, "Note": "Main Site"},
+    {"ZGH": "027", "DAI": "DALTON", "County": "WHITFIELD", "Lat": 34.769, "Lon": -84.970, "Note": ""},
+    {"ZGH": "028", "DAI": "CANTON", "County": "CHEROKEE", "Lat": 34.237, "Lon": -84.494, "Note": ""},
+    {"ZGH": "029", "DAI": "CEDARTOWN", "County": "POLK", "Lat": 34.053, "Lon": -85.255, "Note": ""},
+    {"ZGH": "031", "DAI": "NORCROSS", "County": "GWINNETT", "Lat": 33.941, "Lon": -84.213, "Note": ""},
+    {"ZGH": "033", "DAI": "LAWRENCEVILLE", "County": "GWINNETT", "Lat": 33.956, "Lon": -83.988, "Note": "Main Hub"},
+    {"ZGH": "040", "DAI": "ALBANY", "County": "DOUGHERTY", "Lat": 31.578, "Lon": -84.155, "Note": ""},
+    {"ZGH": "043", "DAI": "CALHOUN", "County": "GORDON", "Lat": 34.502, "Lon": -84.951, "Note": ""},
+    {"ZGH": "044", "DAI": "CONYERS", "County": "ROCKDALE", "Lat": 33.667, "Lon": -84.017, "Note": ""},
+    {"ZGH": "048", "DAI": "NORCROSS", "County": "GWINNETT", "Lat": 33.930, "Lon": -84.120, "Note": "Beaver Ruin Rd"},
+    {"ZGH": "050", "DAI": "ATLANTA", "County": "FULTON", "Lat": 33.753, "Lon": -84.385, "Note": "Downtown"},
+    {"ZGH": "054", "DAI": "SUWANEE", "County": "GWINNETT", "Lat": 34.051, "Lon": -84.062, "Note": ""},
+    {"ZGH": "067", "DAI": "CONYERS", "County": "ROCKDALE", "Lat": 33.650, "Lon": -84.030, "Note": "Auxiliary"},
+    {"ZGH": "068", "DAI": "DOUGLASVILLE", "County": "DOUGLAS", "Lat": 33.751, "Lon": -84.747, "Note": ""},
+    {"ZGH": "081", "DAI": "FAYETTEVILLE", "County": "FAYETTE", "Lat": 33.447, "Lon": -84.455, "Note": ""},
+    {"ZGH": "085", "DAI": "ALPHARETTA", "County": "FULTON", "Lat": 34.075, "Lon": -84.294, "Note": "North Fulton"},
+    {"ZGH": "095", "DAI": "BLAIRSVILLE", "County": "UNION", "Lat": 34.876, "Lon": -83.958, "Note": ""},
+    {"ZGH": "096", "DAI": "NEWNAN", "County": "COWETA", "Lat": 33.376, "Lon": -84.799, "Note": "Newnan CSC"},
+    {"ZGH": "105", "DAI": "CANTON", "County": "CHEROKEE", "Lat": 34.220, "Lon": -84.480, "Note": "Auxiliary"},
+    {"ZGH": "108", "DAI": "CUMMING", "County": "FORSYTH", "Lat": 34.207, "Lon": -84.140, "Note": ""},
+    {"ZGH": "137", "DAI": "ATLANTA", "County": "FULTON", "Lat": 33.716, "Lon": -84.350, "Note": "Moreland Ave"},
 ]
 
-df = pd.DataFrame(site_dict)
+df = pd.DataFrame(site_data)
 
-# 页面设置
-st.set_page_config(page_title="GA DDS 条码助手", layout="wide", initial_sidebar_state="expanded")
+# Streamlit 页面配置
+st.set_page_config(page_title="GA DDS 站点查询全集", layout="wide")
 
-# 自定义 CSS 样式
-st.markdown("""
-    <style>
-    .main { background-color: #f8f9fa; }
-    .stMetric { background-color: #ffffff; padding: 15px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    </style>
-    """, unsafe_allow_html=True)
+st.title("🍑 佐治亚州 (GA) DDS 站点代码 (ZGH) 汇总大全")
+st.markdown("该工具集成了 GA 州所有 DDS 办公地点、对应城市 (DAI) 及所属县 (County)。")
 
-st.title("🍑 GA 州 DDS 站点地理辅助工具")
-st.caption("版本：v1.2 | 专为 AAMVA 387-Byte Bit-for-bit 复刻优化")
+# --- 侧边栏：多维度查询 ---
+st.sidebar.header("🔍 站点筛选")
+query = st.sidebar.text_input("输入 城市、县 或 站点代码:").upper()
 
-# --- 侧边栏：交互查询 ---
-st.sidebar.header("🔍 城市/县查询")
-search_query = st.sidebar.text_input("输入城市或县名称:").upper()
+if query:
+    mask = df.apply(lambda row: query in row.astype(str).values, axis=1)
+    filtered_df = df[mask]
+else:
+    filtered_df = df
 
-if search_query:
-    # 同时搜索城市和县
-    filtered_df = df[(df['City'].str.contains(search_query)) | (df['County'].str.upper().contains(search_query))]
+# --- 主界面：地图与表格 ---
+col_left, col_right = st.columns([1.2, 1])
+
+with col_left:
+    st.subheader("📍 站点地理分布")
+    # 初始化地图
+    m = folium.Map(location=[32.8, -83.6], zoom_start=7, tiles="OpenStreetMap")
     
-    if not filtered_df.empty:
-        for idx, row in filtered_df.iterrows():
-            with st.sidebar.expander(f"📍 {row['City']} (ID: {row['ID']})", expanded=True):
-                st.write(f"**县**: {row['County']}")
-                st.write(f"**站点 ID**: `{row['ID']}`")
-                # 字节对齐预警
-                city_len = len(row['City'])
-                st.info(f"📏 DAI 长度: {city_len} 字节")
-                if city_len != 6: # 假设你的模板是以 NEWNAN (6位) 为准
-                    st.warning(f"注意：该城市长度与 NEWNAN 不符，偏移量将漂移 {city_len - 6} 字节！")
-    else:
-        st.sidebar.error("未找到对应站点。")
-
-# --- 主界面布局 ---
-col_map, col_data = st.columns([3, 2])
-
-with col_map:
-    st.subheader("🗺️ 站点分布图")
-    # 设置地图中心为佐治亚州中心
-    m = folium.Map(location=[32.8, -83.6], zoom_start=7, tiles="CartoDB positron")
-    
-    for i, row in df.iterrows():
+    # 在地图上标记筛选后的点
+    for _, row in filtered_df.iterrows():
         folium.Marker(
             [row['Lat'], row['Lon']],
-            popup=f"ID: {row['ID']}<br>City: {row['City']}<br>County: {row['County']}",
-            tooltip=f"{row['City']} ({row['ID']})",
+            popup=f"ID: {row['ZGH']}<br>DAI: {row['DAI']}<br>County: {row['County']}",
+            tooltip=f"{row['DAI']} ({row['ZGH']})",
             icon=folium.Icon(color="blue", icon="info-sign")
         ).add_to(m)
     
-    st_folium(m, width=700, height=500)
+    st_folium(m, width=600, height=500)
 
-with col_data:
-    st.subheader("📊 站点对照表")
-    # 显示表格并允许下载
-    st.dataframe(df[['ID', 'City', 'County']], height=400, use_container_width=True)
+with col_right:
+    st.subheader("📋 站点对照表")
+    # 动态显示过滤后的表格
+    st.dataframe(filtered_df[['ZGH', 'DAI', 'County', 'Note']], height=450, use_container_width=True)
     
-    csv = df[['ID', 'City', 'County']].to_csv(index=False).encode('utf-8')
+    # 导出功能
+    csv = df[['ZGH', 'DAI', 'County', 'Note']].to_csv(index=False).encode('utf-8')
     st.download_button(
-        label="📥 下载完整站点 XLS (CSV 格式)",
+        label="📥 下载完整对照表 (CSV/XLS 兼容)",
         data=csv,
         file_name='GA_DDS_Station_Full_List.csv',
         mime='text/csv',
     )
 
 st.divider()
-
-# --- 底部：复刻知识库 ---
-with st.expander("🛠️ 针对 387 字节 GA 样本的复刻提示"):
-    st.markdown("""
-    1. **DAI 长度对齐**：`NEWNAN`(6) vs `SAVANNAH`(8)。如果 DAI 长度改变，必须手动调整 `DL` 子文件设计器的 Length 位。
-    2. **ZGH 格式**：GA 州固定为 3 位数字（补 0），例如 `018` 而非 `18`。
-    3. **县名同步**：确保条码中的 `ZGD` 字段与此处查询到的县名一致。
-    4. **DAK 空格**：邮编后方必须跟两个 Hex 空格 `20 20`。
-    """)
+st.caption("提示：在条码生成中，请确保 ZGH 字段为 3 位数字（如 018），DAI 字段与上述城市名完全一致。")
