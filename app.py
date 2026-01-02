@@ -5,7 +5,7 @@ from streamlit_folium import st_folium
 from geopy.geocoders import Nominatim
 from geopy.distance import geodesic
 
-# 1. 完整 GA DDS 站点数据库
+# 1. 完整 GA DDS 站点数据库 (已添加 086 站点)
 site_data = [
     {"ZGH": "001", "DAI": "ATLANTA", "County": "FULTON", "Lat": 33.744, "Lon": -84.394, "Note": "Whitehall St"},
     {"ZGH": "003", "DAI": "CARTERSVILLE", "County": "BARTOW", "Lat": 34.165, "Lon": -84.796, "Note": ""},
@@ -25,6 +25,7 @@ site_data = [
     {"ZGH": "054", "DAI": "SUWANEE", "County": "GWINNETT", "Lat": 34.051, "Lon": -84.062, "Note": ""},
     {"ZGH": "081", "DAI": "FAYETTEVILLE", "County": "FAYETTE", "Lat": 33.447, "Lon": -84.455, "Note": ""},
     {"ZGH": "085", "DAI": "ALPHARETTA", "County": "FULTON", "Lat": 34.075, "Lon": -84.294, "Note": "North Fulton"},
+    {"ZGH": "086", "DAI": "ACWORTH", "County": "COBB", "Lat": 34.043, "Lon": -84.664, "Note": "Kennesaw/Acworth Site"},
     {"ZGH": "096", "DAI": "NEWNAN", "County": "COWETA", "Lat": 33.376, "Lon": -84.799, "Note": "Newnan CSC"},
     {"ZGH": "137", "DAI": "ATLANTA", "County": "FULTON", "Lat": 33.716, "Lon": -84.350, "Note": "Moreland Ave"},
 ]
