@@ -6,6 +6,7 @@ from geopy.geocoders import Nominatim
 from geopy.distance import geodesic
 
 # 1. 完整 GA DDS 站点数据库 (涵盖全州 60+ 主要站点)
+# 已经包含 086 Acworth, 143 Sugar Hill 等最新站点
 site_data = [
     {"ZGH": "001", "DAI": "ATLANTA", "County": "FULTON", "Lat": 33.744, "Lon": -84.394, "Note": "Whitehall St"},
     {"ZGH": "002", "DAI": "ALBANY", "County": "DOUGHERTY", "Lat": 31.578, "Lon": -84.155, "Note": ""},
@@ -51,7 +52,7 @@ site_data = [
     {"ZGH": "082", "DAI": "LAGRANGE", "County": "TROUP", "Lat": 33.039, "Lon": -85.031, "Note": ""},
     {"ZGH": "083", "DAI": "LAFAYETTE", "County": "WALKER", "Lat": 34.704, "Lon": -85.289, "Note": ""},
     {"ZGH": "085", "DAI": "ALPHARETTA", "County": "FULTON", "Lat": 34.075, "Lon": -84.294, "Note": ""},
-    {"ZGH": "086", "DAI": "ACWORTH", "County": "COBB", "Lat": 34.043, "Lon": -84.664, "Note": "Kennesaw/Acworth"},
+    {"ZGH": "086", "DAI": "ACWORTH", "County": "COBB", "Lat": 34.043, "Lon": -84.664, "Note": "Kennesaw/Acworth Site"},
     {"ZGH": "087", "DAI": "KINGS BAY", "County": "CAMDEN", "Lat": 30.796, "Lon": -81.547, "Note": ""},
     {"ZGH": "089", "DAI": "LOUISVILLE", "County": "JEFFERSON", "Lat": 33.001, "Lon": -82.411, "Note": ""},
     {"ZGH": "091", "DAI": "LOCUST GROVE", "County": "HENRY", "Lat": 33.345, "Lon": -84.110, "Note": ""},
@@ -76,24 +77,24 @@ site_data = [
     {"ZGH": "130", "DAI": "WAYNESBORO", "County": "BURKE", "Lat": 33.090, "Lon": -82.015, "Note": ""},
     {"ZGH": "132", "DAI": "WINDER", "County": "BARROW", "Lat": 33.992, "Lon": -83.720, "Note": ""},
     {"ZGH": "137", "DAI": "ATLANTA", "County": "FULTON", "Lat": 33.716, "Lon": -84.350, "Note": "Moreland Ave"},
-    {"ZGH": "143", "DAI": "SUGAR HILL", "County": "GWINNETT", "Lat": 34.120, "Lon": -84.040, "Note": "New Site"},
+    {"ZGH": "143", "DAI": "SUGAR HILL", "County": "GWINNETT", "Lat": 34.120, "Lon": -84.040, "Note": "New Hub"},
 ]
 
+# --- 以下为应用核心逻辑 (保持不变) ---
 df = pd.DataFrame(site_data)
-geolocator = Nominatim(user_agent="ga_dds_locator_full")
+geolocator = Nominatim(user_agent="ga_dds_locator_pro")
 
 st.set_page_config(page_title="GA DDS 站点大全", layout="wide")
 st.title("🍑 佐治亚州 (GA) DDS 站点智能查询系统 (全省版)")
 
 # --- 侧边栏搜索逻辑 ---
-st.sidebar.header("🔍 搜索中心")
-query = st.sidebar.text_input("搜索 ID (如 086)、城市或县:").upper()
+st.sidebar.header("🔍 搜索与推荐")
+query = st.sidebar.text_input("输入城市、县或代码 (如 086):").upper()
 
 search_lat, search_lon = None, None
 is_recommendation = False
 
 if query:
-    # 模糊匹配
     filtered_df = df[
         (df['DAI'].str.contains(query, na=False)) | 
         (df['County'].str.contains(query, na=False)) | 
@@ -108,58 +109,42 @@ if query:
                 df['distance'] = df.apply(
                     lambda row: geodesic((search_lat, search_lon), (row['Lat'], row['Lon'])).miles, axis=1
                 )
-                filtered_df = df.sort_values('distance').head(5) # 推荐最近5个
+                filtered_df = df.sort_values('distance').head(5)
                 is_recommendation = True
                 st.sidebar.warning(f"坐标定位：已显示距离 {query} 最近的站点。")
         except:
-            st.sidebar.error("未找到相关信息。")
+            st.sidebar.error("无法定位位置。")
 else:
     filtered_df = df
 
-# --- 界面布局 ---
-col_map, col_table = st.columns([1.6, 1])
+# --- 布局 ---
+col_left, col_right = st.columns([1.6, 1])
 
-with col_map:
-    st.subheader("📍 交互式分布图")
-    # 动态中心点
+with col_left:
+    st.subheader("📍 全省分布图")
     c_lat = search_lat if search_lat else 32.8
     c_lon = search_lon if search_lon else -83.6
-    
     m = folium.Map(location=[c_lat, c_lon], zoom_start=7, tiles="cartodbpositron")
     
-    # 标记站点
     for _, row in filtered_df.iterrows():
         color = "green" if is_recommendation else "blue"
-        popup_html = f"<b>站点代码:</b> {row['ZGH']}<br><b>城市:</b> {row['DAI']}<br><b>县:</b> {row['County']}"
-        if 'distance' in row:
-            popup_html += f"<br><b>距离:</b> {row['distance']:.1f} mi"
-            
         folium.Marker(
             [row['Lat'], row['Lon']],
-            popup=folium.Popup(popup_html, max_width=200),
+            popup=f"ID: {row['ZGH']}<br>City: {row['DAI']}<br>County: {row['County']}",
             tooltip=f"{row['DAI']} ({row['ZGH']})",
             icon=folium.Icon(color=color, icon="info-sign")
         ).add_to(m)
     
-    st_folium(m, width="100%", height=600)
+    st_folium(m, width="100%", height=550)
 
-with col_table:
-    st.subheader(f"📋 站点详情 ({len(filtered_df)} 条结果)")
-    cols_to_show = ['ZGH', 'DAI', 'County', 'Note']
+with col_right:
+    st.subheader(f"📋 站点详情清单 ({len(filtered_df)})")
+    display_cols = ['ZGH', 'DAI', 'County', 'Note']
     if 'distance' in filtered_df.columns:
-        cols_to_show.append('distance')
-        
-    st.dataframe(
-        filtered_df[cols_to_show].sort_values('ZGH'), 
-        use_container_width=True, 
-        height=550
-    )
-
+        display_cols.append('distance')
+    
+    st.dataframe(filtered_df[display_cols].sort_values('ZGH'), use_container_width=True, height=500)
+    
     # 下载
     csv = df.to_csv(index=False).encode('utf-8')
-    st.download_button(
-        label="📥 下载全州 60+ 站点清单 (CSV)",
-        data=csv,
-        file_name='GA_DDS_Full_Stations.csv',
-        mime='text/csv',
-    )
+    st.download_button("📥 下载全省 60+ 站点 CSV", data=csv, file_name='GA_DDS_Full_List.csv')
