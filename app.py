@@ -82,7 +82,7 @@ full_site_data = [
 ]
 
 # --- 2. 应用设置 ---
-st.set_page_config(page_title="GA DDS 站点大全 (WI Logic修复版)", layout="wide")
+st.set_page_config(page_title="GA DDS 站点大全", layout="wide")
 
 # 强制刷新 DataFrame
 df = pd.DataFrame(full_site_data)
